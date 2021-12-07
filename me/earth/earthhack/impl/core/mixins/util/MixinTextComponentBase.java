@@ -1,0 +1,61 @@
+/*
+ * Decompiled with CFR 0.150.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.util.text.ITextComponent
+ *  net.minecraft.util.text.TextComponentBase
+ *  org.spongepowered.asm.mixin.Mixin
+ *  org.spongepowered.asm.mixin.injection.At
+ *  org.spongepowered.asm.mixin.injection.Inject
+ *  org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
+ */
+package me.earth.earthhack.impl.core.mixins.util;
+
+import java.util.function.Supplier;
+import me.earth.earthhack.impl.core.ducks.util.ITextComponentBase;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentBase;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(value={TextComponentBase.class})
+public abstract class MixinTextComponentBase
+implements ITextComponentBase,
+ITextComponent {
+    private Supplier<String> hookFormat;
+    private Supplier<String> hookUnFormat;
+
+    @Override
+    public void setFormattingHook(Supplier<String> hook) {
+        this.hookFormat = hook;
+    }
+
+    @Override
+    public void setUnFormattedHook(Supplier<String> hook) {
+        this.hookUnFormat = hook;
+    }
+
+    @Override
+    public ITextComponent copyNoSiblings() {
+        ITextComponent copy = this.createCopy();
+        copy.getSiblings().clear();
+        return copy;
+    }
+
+    @Inject(method={"getFormattedText"}, at={@At(value="HEAD")}, cancellable=true)
+    public void getFormattedTextHook(CallbackInfoReturnable<String> info) {
+        if (this.hookFormat != null) {
+            info.setReturnValue((Object)this.hookFormat.get());
+        }
+    }
+
+    @Inject(method={"getUnformattedText"}, at={@At(value="HEAD")}, cancellable=true)
+    public void getUnformattedTextHook(CallbackInfoReturnable<String> info) {
+        if (this.hookUnFormat != null) {
+            info.setReturnValue((Object)this.hookUnFormat.get());
+        }
+    }
+}
+
